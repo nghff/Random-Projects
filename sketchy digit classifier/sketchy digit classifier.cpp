@@ -64,11 +64,37 @@ void input_data()
 // PROGRAM DATA
 FCNN model;
 
-void train_stochastic()
+
+void evaluate_model()
 {
-	model = FCNN({ 450, 450, 10}, 28 * 28);
-	printf("training...\n");
-	int epochs = 2;
+	printf("\nEvaluating model...\n");
+
+	int numCorrect = 0;
+	for (int imgID = 0; imgID < numImg2; imgID++)
+	{
+		vector<double> output = model.forward_prop(imgs2[imgID]);
+		double hc = -1; int netAns = -1, ans = int(imgs2[imgID].label);
+		for (int i = 0; i < output.size(); i++)
+		{
+			if (hc < output[i])
+				hc = output[i], netAns = i;
+		}
+		/*if (imgID % 3700 == 0)
+		{
+			imgs2[imgID].display();
+			printf("network answer: %d\n", netAns);
+		}*/
+		if (netAns == ans) numCorrect++;
+	}
+
+	printf("Accurracy: %.4f\n\n", (double)numCorrect / numImg2);
+}
+
+
+void train_stochastic(int epochs)
+{
+	//evaluate_model();
+	printf("Training...\n");
 	for(int epoch = 0; epoch < epochs; epoch++)
 	{
 		printf("EPOCH: %d\n", epoch);
@@ -101,26 +127,28 @@ void train_stochastic()
 			{
 				approxAcc /= interval;
 				printf("%18s%d/%d\n", "progress: ", trainIID, numImg1);
+				printf("%18s%.6f\n", "learning rate: ", learnRate);
 				printf("%18s%.2f%%\n\n", "approx. accuracy: ", approxAcc * 100);
 				//cout << "ex. label: \t\t" << int(imgs1[trainIID].label) << '\n';
 				//cout << "ex. predicted: \t" << netAns << "\n\n";
 				approxAcc = 0.0;
 			}
-			learnRate -= 0.01 * 1.5 / (numImg1 * epochs);
-			learnRate = max(learnRate, 0.01 * 0.025);
+			learnRate /= 1.00002;
+			learnRate = max(learnRate, 0.0008);
 		}
+		evaluate_model();
 	}
-	printf("training finished\n");
+	printf("Training finished\n");
 }
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
+
 	//getting ready
 	input_data();
-	printf("metas: %d, %d, %d, %d\n",numImg1, numImg2, prows, pcols); //display metas
-	//imgs1[18].display();
+	printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
 
 	//start the stuff
-	train_stochastic();
+	model = FCNN({ 450, 450, 10 }, 28 * 28);
+	train_stochastic(3);
 }

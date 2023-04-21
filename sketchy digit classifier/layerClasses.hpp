@@ -6,12 +6,15 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
+#include <future>
 #include <time.h>
 #include <winsock.h>
 #include "actfuncs.hpp"
 using namespace std;
 
 #define uchar unsigned char
+
+
 
 class fcLayer; class img_28x28; class cLayer; class cUnit; class pUnit;
 

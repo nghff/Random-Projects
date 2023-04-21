@@ -13,6 +13,6 @@ ifstream
 imgsFile1(imgs1fn, ios::in | ios::binary),
 imgsFile2(imgs2fn, ios::in | ios::binary),
 labelsFile1(labels1fn, ios::in | ios::binary),
-labelsFile2(labels1fn, ios::in | ios::binary);
+labelsFile2(labels2fn, ios::in | ios::binary);
 const int batchSize = 64;
-double learnRate = 0.01;
+double learnRate = 0.05;

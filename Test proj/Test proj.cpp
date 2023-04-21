@@ -1,4 +1,11 @@
 #include <windows.h>
+#include <vector>
+#include <algorithm>
+#include <ranges>
+#include <execution>
+#include <numeric>
+#include <iostream>
+using namespace std;
 
 int ScreenX = 0;
 int ScreenY = 0;
@@ -33,8 +40,14 @@ void ScreenCap()
     DeleteObject(hBitmap);
 }
 
+int f(int x, int y)
+{
+    if (x % 2 == 0) return f(x / 2, y - 3) - x * y;
+    if (x % 2 != 0 && x % 3 == 0) return f(y + 2, x / 3) + x;
+    return x * y;
+}
 
 int main()
 {
-
+    cout << f(12, 18) << '\n';
 }
