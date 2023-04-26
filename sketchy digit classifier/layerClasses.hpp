@@ -40,76 +40,6 @@ public:
 	void backProp(fcLayer& nextLayer);
 };
 
-class cUnit
-{
-public:
-	int r, c;
-	vector<vector<double>> pix, w, b, out;
-	cUnit(int r, int c)
-	{
-		w.resize(3, vector<double>(3));
-		b.resize(r, vector<double>(c));
-		pix.resize(r, vector<double>(c));
-		initWB();
-	}
-
-	void initWB();
-
-	void fromUnit(const img_28x28& im);
-
-	void activate();
-};
-
-class pUnit
-{
-public:
-	int r, c;
-	vector<vector<double>> pix;
-	pUnit(int r, int c)
-	{
-		pix.resize(r, vector<double>(c));
-	}
-
-	void fromUnit(const cUnit& cu);
-};
-
-class cLayer
-{
-public:
-	int len;
-	vector<cUnit> units;
-	cLayer(int len, int rows, int columns)
-	{
-		this->len = len;
-		units = vector<cUnit>(len, cUnit(rows, columns));
-	}
-
-	void fromImg(const img_28x28& im)
-	{
-		for (cUnit& unit : units)
-			unit.fromUnit(im);
-	}
-};
-
-class pLayer
-{
-public:
-	int len;
-	vector<pUnit> units;
-	pLayer(int len, int rows, int cols)
-	{
-		this->len = len;
-		units.resize(len, pUnit(rows, cols));
-	}
-
-	void fromLayer(const cLayer& cl)
-	{
-		if (cl.len != len) return;
-		for (int i = 0; i < len; i++)
-			units[i].fromUnit(cl.units[i]);
-	}
-};
-
 class fcLayer
 {
 public:
@@ -152,56 +82,6 @@ inline void img_28x28::backProp(fcLayer& nextLayer)
 		for (int y = 0; y < 28; ++y)
 			for (int j = 0; j < nextLayer.len; ++j)
 				nextLayer.dw[j][x * 28 + y] += dX[j] * pixels[x][y];
-}
-
-inline void cUnit::initWB()
-{
-	// TODO: implement xaviers?
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-			w[i][j] = double(rand() % 1000) / 1000 - 0.5;
-	for (int i = 0; i < b.size(); i++)
-		for (int j = 0; j < b[i].size(); j++)
-			b[i][j] = 0.01;
-}
-inline void cUnit::fromUnit(const img_28x28& im)
-{
-	for (int i = 0; i < 28; i++)
-	{
-		for (int j = 0; j < 28; j++)
-		{
-			pix[i][j] = b[i][j];
-			for (int di = -1; di < 2; di++)
-				for (int dj = -1; dj < 2; dj++)
-				{
-					int ni = i + di, nj = j + dj;
-					if (ni == -1 || ni == 28 || nj == -1 || nj == 28)
-						continue;
-					pix[i][j] += w[di + 1][dj + 1] * im.pixels[ni][nj];
-				}
-		}
-	}
-}
-inline void cUnit::activate()
-{
-	for(int i = 0; i < r; i++)
-		for (int j = 0; j < c; j++)
-		{
-			out[i][j] = fReLU(pix[i][j]);
-		}
-}
-
-inline void pUnit::fromUnit(const cUnit& cu)
-{
-	const vector<vector<double>>& prev = cu.out;
-	for(int i = 0; i < r; i++)
-		for (int j = 0; j < c; j++)
-		{
-			pix[i][j] = prev[i * 2][j * 2];
-			pix[i][j] = max(pix[i][j], prev[i * 2 + 1][j * 2]);
-			pix[i][j] = max(pix[i][j], prev[i * 2][j * 2 + 1]);
-			pix[i][j] = max(pix[i][j], prev[i * 2 + 1][j * 2 + 1]);
-		}
 }
 
 inline void fcLayer::fromLayer(const vector<double>& fcl)

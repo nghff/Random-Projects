@@ -10,7 +10,8 @@ public:
 	int numLayers;
 	vector<fcLayer> layers;
 	bool prepared_weights;
-	FCNN() {}
+
+	FCNN() { ; }
 	FCNN(const vector<int>& layerSizes, const int& inDim)
 	{
 		//TODO: xaviers

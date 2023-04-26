@@ -1,4 +1,3 @@
-#pragma GCC optimize("O2","unroll-loops")
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -133,22 +132,130 @@ void train_stochastic(int epochs)
 				//cout << "ex. predicted: \t" << netAns << "\n\n";
 				approxAcc = 0.0;
 			}
-			learnRate /= 1.00002;
-			learnRate = max(learnRate, 0.0008);
 		}
 		evaluate_model();
 	}
 	printf("Training finished\n");
 }
+
+void write_vector1D(vector<double>& v, ofstream& file)
+{
+	file << '\n';
+	for (double d : v) file << d << '\n';
+	file << '\n';
+}
+
+void write_vector2D(vector<vector<double>>& v, ofstream& file)
+{
+	file << '\n';
+	for (vector<double> vd : v) for (double d : vd) file << d << '\n';
+	file << '\n';
+}
+
+void read_vector1D(vector<double>& v, ifstream& file)
+{
+	for (double& d : v) file >> d;
+}
+
+void read_vector2D(vector<vector<double>>& v, ifstream& file)
+{
+	for (vector<double>& vd : v) for (double& d : vd) file >> d;
+}
+
+void save_model()
+{
+	ofstream file("model_save.bin");
+	cout << "saving model...\n";
+	file << model.numLayers << '\n' << model.prepared_weights << '\n';
+	for (fcLayer& layer : model.layers)
+	{
+		file << layer.len << '\n' << layer.w[0].size() << '\n' << (int)(layer.allocated) << '\n' << layer.minW << '\n' << layer.maxW << '\n';
+
+		write_vector1D(layer.A, file);
+		write_vector1D(layer.B, file);
+
+		write_vector1D(layer.dA, file);
+
+		write_vector1D(layer.b, file);
+		write_vector1D(layer.db, file);
+
+		write_vector2D(layer.w, file);
+		write_vector2D(layer.dw, file);
+	}
+	file.close();
+	cout << "finished.\n";
+}
+
+void read_model()
+{
+	ifstream file("model_save.bin");
+	cout << "reading model...\n";
+	file >> model.numLayers >> model.prepared_weights; model.layers.resize(model.numLayers);
+	for (fcLayer& layer : model.layers)
+	{
+		int wsize, len;
+		file >> layer.len >> wsize >> layer.allocated >> layer.minW >> layer.maxW;
+		len = layer.len;
+		layer.A.resize(len),
+			layer.dA.resize(len),
+			layer.B.resize(len),
+			layer.b.resize(len),
+			layer.db.resize(len);
+
+		read_vector1D(layer.A, file);
+		read_vector1D(layer.B, file);
+
+		read_vector1D(layer.dA, file);
+
+		read_vector1D(layer.b, file);
+		read_vector1D(layer.db, file);
+
+		layer.w.resize(len, vector<double>(wsize)),
+			layer.dw.resize(len, vector<double>(wsize));
+
+		read_vector2D(layer.w, file);
+		read_vector2D(layer.dw, file);
+	}
+
+	cout << "finished.\n";
+}
+
+string prompt(string message) { cout << message << '\n'; string in; cin >> in; return in; }
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
 
-	//getting ready
-	input_data();
-	printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
+	if(prompt("Do you want to use a pretrained model? ( 'y' / 'n' )") == "n")
+	{
+		// getting datasets ready
+		input_data();
+		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
 
-	//start the stuff
-	model = FCNN({ 450, 450, 10 }, 28 * 28);
-	train_stochastic(3);
+		// start training
+		model = FCNN({ 500, 300, 10 }, 28 * 28);
+		train_stochastic(1);
+		if(prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
+	}
+	else
+	{
+		// getting datasets ready
+		read_model();
+		while (true)
+		{
+			string action = prompt("What do you want to do with this model?\n\t- test accuracy ('T')\n\t- use file ('P')\n\t- quit ('Q')");
+			if (action == "Q") break;
+			if (action == "T")
+			{
+				input_data(), evaluate_model();
+				continue;
+			}
+			if (action == "P")
+			{
+				cout << "to be implemented...\n";
+				continue;
+			}
+			cout << "Invalid input. ignored...\n";
+		}
+	}
 }
