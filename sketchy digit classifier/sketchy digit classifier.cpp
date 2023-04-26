@@ -171,16 +171,9 @@ void save_model()
 	{
 		file << layer.len << '\n' << layer.w[0].size() << '\n' << (int)(layer.allocated) << '\n' << layer.minW << '\n' << layer.maxW << '\n';
 
-		write_vector1D(layer.A, file);
-		write_vector1D(layer.B, file);
-
-		write_vector1D(layer.dA, file);
-
 		write_vector1D(layer.b, file);
-		write_vector1D(layer.db, file);
 
 		write_vector2D(layer.w, file);
-		write_vector2D(layer.dw, file);
 	}
 	file.close();
 	cout << "finished.\n";
@@ -202,19 +195,12 @@ void read_model()
 			layer.b.resize(len),
 			layer.db.resize(len);
 
-		read_vector1D(layer.A, file);
-		read_vector1D(layer.B, file);
-
-		read_vector1D(layer.dA, file);
-
 		read_vector1D(layer.b, file);
-		read_vector1D(layer.db, file);
 
 		layer.w.resize(len, vector<double>(wsize)),
 			layer.dw.resize(len, vector<double>(wsize));
 
 		read_vector2D(layer.w, file);
-		read_vector2D(layer.dw, file);
 	}
 
 	cout << "finished.\n";
@@ -233,7 +219,7 @@ int main()
 		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
 
 		// start training
-		model = FCNN({ 500, 300, 10 }, 28 * 28);
+		model = FCNN({ 450, 400, 10 }, 28 * 28);
 		train_stochastic(1);
 		if(prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
 	}
