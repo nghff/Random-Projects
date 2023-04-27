@@ -90,10 +90,12 @@ void evaluate_model()
 }
 
 
-void train_stochastic(int epochs)
+void train_stochastic(int epochs, double maxLearnRate, double minLearnRate)
 {
 	//evaluate_model();
 	printf("Training...\n");
+
+	double totalImgs = (double) (epochs) * numImg1;
 	for(int epoch = 0; epoch < epochs; epoch++)
 	{
 		printf("EPOCH: %d\n", epoch);
@@ -119,14 +121,15 @@ void train_stochastic(int epochs)
 				}
 			}
 			model.backward_prop(dEdO, imgs1[trainIID]);
-			model.updateWB(learnRate);
+			double currLearnRate = maxLearnRate - ((maxLearnRate - minLearnRate) / totalImgs) * (double(epoch) * numImg1 + trainIID);
+			model.updateWB(currLearnRate);
 			trainIID++;
 			if (netAns == ans) approxAcc += 1.0;
 			if (trainIID % interval == 0)
 			{
 				approxAcc /= interval;
 				printf("%18s%d/%d\n", "progress: ", trainIID, numImg1);
-				printf("%18s%.6f\n", "learning rate: ", learnRate);
+				printf("%18s%.6f\n", "learning rate: ", currLearnRate);
 				printf("%18s%.2f%%\n\n", "approx. accuracy: ", approxAcc * 100);
 				//cout << "ex. label: \t\t" << int(imgs1[trainIID].label) << '\n';
 				//cout << "ex. predicted: \t" << netAns << "\n\n";
@@ -212,20 +215,9 @@ int main()
 {
 	ios_base::sync_with_stdio(false);
 
-	string mode = prompt("What do you want to do?\n1. use pretrained model\n2. trained new model\n3. save readable test data\n");
+	string mode = prompt("What do you want to do?\n1. use pretrained model\n2. train a new model\n3. save readable test data\n");
 
 	if(mode == "1")
-	{
-		// getting datasets ready
-		input_data();
-		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
-
-		// start training
-		model = FCNN({ 450, 450, 10 }, 28 * 28);
-		train_stochastic(1);
-		if(prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
-	}
-	else if(mode == "2")
 	{
 		// getting datasets ready
 		read_model();
@@ -246,8 +238,20 @@ int main()
 			cout << "Invalid input. ignored...\n";
 		}
 	}
+	else if(mode == "2")
+	{
+		// getting datasets ready
+		input_data();
+		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
+
+		// start training
+		model = FCNN({ 550, 450, 10 }, 28 * 28);
+		train_stochastic(1, 0.009, 0.0005);
+		if (prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
+	}
 	else if(mode == "3")
 	{
+		input_data();
 		ofstream fout("test_imgs_readable.txt");
 
 		for (int i = 0; i < 100; i++)
