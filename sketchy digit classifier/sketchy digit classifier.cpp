@@ -78,11 +78,11 @@ void evaluate_model()
 			if (hc < output[i])
 				hc = output[i], netAns = i;
 		}
-		/*if (imgID % 3700 == 0)
+		if (imgID % 3700 == 0)
 		{
 			imgs2[imgID].display();
 			printf("network answer: %d\n", netAns);
-		}*/
+		}
 		if (netAns == ans) numCorrect++;
 	}
 
@@ -164,7 +164,7 @@ void read_vector2D(vector<vector<double>>& v, ifstream& file)
 
 void save_model()
 {
-	ofstream file("model_save.bin");
+	ofstream file("model_save.txt");
 	cout << "saving model...\n";
 	file << model.numLayers << '\n' << model.prepared_weights << '\n';
 	for (fcLayer& layer : model.layers)
@@ -181,7 +181,7 @@ void save_model()
 
 void read_model()
 {
-	ifstream file("model_save.bin");
+	ifstream file("model_save.txt");
 	cout << "reading model...\n";
 	file >> model.numLayers >> model.prepared_weights; model.layers.resize(model.numLayers);
 	for (fcLayer& layer : model.layers)
@@ -212,18 +212,20 @@ int main()
 {
 	ios_base::sync_with_stdio(false);
 
-	if(prompt("Do you want to use a pretrained model? ( 'y' / 'n' )") == "n")
+	string mode = prompt("What do you want to do?\n1. use pretrained model\n2. trained new model\n3. save readable test data\n");
+
+	if(mode == "1")
 	{
 		// getting datasets ready
 		input_data();
 		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
 
 		// start training
-		model = FCNN({ 450, 400, 10 }, 28 * 28);
+		model = FCNN({ 450, 450, 10 }, 28 * 28);
 		train_stochastic(1);
 		if(prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
 	}
-	else
+	else if(mode == "2")
 	{
 		// getting datasets ready
 		read_model();
@@ -242,6 +244,27 @@ int main()
 				continue;
 			}
 			cout << "Invalid input. ignored...\n";
+		}
+	}
+	else if(mode == "3")
+	{
+		ofstream fout("test_imgs_readable.txt");
+
+		for (int i = 0; i < 100; i++)
+		{
+			fout << "{ ";
+			for (int x = 0; x < 28; x++)
+			{
+				fout << "{";
+				for (int y = 0; y < 28; y++)
+				{
+					fout << int(imgs2[i].pixels[x][y]) << ", ";
+				}
+
+				fout << "}";
+				if (x != 27) fout << ", \n";
+			}
+			fout << "}\n\n";
 		}
 	}
 }
