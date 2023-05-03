@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdlib>
 #include <time.h>
@@ -38,10 +39,10 @@ img_28x28 read_img(ifstream& st)
 void read_imgs()
 {
 	for (int i = 0; i < numImg1; ++i)
-		imgs1[i] = read_img(imgsFile1), 
+		imgs1[i] = read_img(imgsFile1).centered(),
 		imgs1[i].label = next_byte(labelsFile1);
 	for (int i = 0; i < numImg2; ++i)
-		imgs2[i] = read_img(imgsFile2),
+		imgs2[i] = read_img(imgsFile2).centered(),
 		imgs2[i].label = next_byte(labelsFile2);
 }
 void input_data()
@@ -80,8 +81,8 @@ void evaluate_model()
 		}
 		if (imgID % 3700 == 0)
 		{
-			imgs2[imgID].display();
-			printf("network answer: %d\n", netAns);
+			//imgs2[imgID].display();
+			//printf("network answer: %d\n", netAns);
 		}
 		if (netAns == ans) numCorrect++;
 	}
@@ -89,6 +90,10 @@ void evaluate_model()
 	printf("Accurracy: %.4f\n\n", (double)numCorrect / numImg2);
 }
 
+double getLearnRate(const int& imgNumber, const double& maxLearnRate, const double& minLearnRate, const int& totalImgs)
+{
+	return maxLearnRate * pow(M_E, log(minLearnRate / maxLearnRate) / (totalImgs - 1) * imgNumber);
+}
 
 void train_stochastic(int epochs, double maxLearnRate, double minLearnRate)
 {
@@ -121,7 +126,7 @@ void train_stochastic(int epochs, double maxLearnRate, double minLearnRate)
 				}
 			}
 			model.backward_prop(dEdO, imgs1[trainIID]);
-			double currLearnRate = maxLearnRate - ((maxLearnRate - minLearnRate) / totalImgs) * (double(epoch) * numImg1 + trainIID);
+			double currLearnRate = getLearnRate(epoch * numImg1 + trainIID, maxLearnRate, minLearnRate, totalImgs);
 			model.updateWB(currLearnRate);
 			trainIID++;
 			if (netAns == ans) approxAcc += 1.0;
@@ -245,8 +250,8 @@ int main()
 		printf("Metas (# of training images, # of testing images, rows of pixels per image, columns of pixels per image): \n%d, %d, %d, %d\n", numImg1, numImg2, prows, pcols); //display metas
 
 		// start training
-		model = FCNN({ 550, 450, 10 }, 28 * 28);
-		train_stochastic(1, 0.009, 0.0005);
+		model = FCNN({ 500, 450, 10 }, 28 * 28);
+		train_stochastic(2, 0.01, 0.0002);
 		if (prompt("Do you want to save this model? ( 'y' / 'n' )") == "y") save_model();
 	}
 	else if(mode == "3")

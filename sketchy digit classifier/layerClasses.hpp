@@ -23,10 +23,7 @@ class img_28x28
 public:
 	uchar pixels[28][28];
 	uchar label;
-	img_28x28()
-	{
 
-	}
 	void display()
 	{
 		for (int i = 0; i < 28; ++i)
@@ -37,6 +34,33 @@ public:
 		}
 		cout << "label: " << int(label) << '\n';
 	}
+
+	img_28x28 centered()
+	{
+		//display();
+		int left = 27, right = 0, top = 27, bottom = 0;
+
+		for (int i = 0; i < 28; ++i) for (int j = 0; j < 28; ++j)
+			if (int(pixels[i][j]) > 0)
+			{
+				left = min(left, j), right = max(right, j);
+				top = min(top, i), bottom = max(bottom, i);
+			}
+		
+		int bci = (bottom + top) / 2, bcj = (right + left) / 2;
+		int di = bci - 13, dj = bcj - 13;
+		//std::cout << "DEBUG::\nleft:: " << left << "\nright::" << right << "\ntop::" << top << "\nbottom::" << bottom << "\n bci, bcj::" << bci << ", " << bcj << "di, dj::" << di << "," << dj << std::endl;
+		img_28x28 centered_img; centered_img.label = label;
+		for(int i = 0; i < 28; ++i)
+			fill(centered_img.pixels[i], centered_img.pixels[i] + sizeof(centered_img.pixels[i]) / sizeof(uchar), uchar(0));
+
+		for (int i = top; i <= bottom; ++i) for (int j = left; j <= right; ++j)
+			centered_img.pixels[i - di][j - dj] = pixels[i][j];
+
+		//centered_img.display();
+		return centered_img;
+	}
+
 	void backProp(fcLayer& nextLayer);
 };
 
